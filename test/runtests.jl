@@ -1,5 +1,7 @@
 using VectorCalculus
 using Base.Test
 
-# write your own tests here
-@test 1 == 2
+@testset "VectorCalculus" begin
+    include("vector_identities.jl")
+
+end
