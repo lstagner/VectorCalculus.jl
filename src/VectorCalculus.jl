@@ -13,5 +13,7 @@ include("differential_operations.jl")
 export CartesianCoordinate, PolarCoordinate, CylindricalCoordinate, SphericalCoordinate
 export Coordinate, CoordinateVector
 export CovariantVector, ContravariantVector
-
+export metric
+export covariant_basis, covariant_metric
+export contravariant_basis, contravariant_metric
 end
