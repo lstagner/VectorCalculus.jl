@@ -1,12 +1,12 @@
 function dot{T<:CoordinateVector}(A::T,B::T)
     A.coord=== B.coord || throw(ArgumentError("Vectors must have the same coordinates"))
-    dp = sum((A.data ./ A.h) .* (A.g*(B.data ./ B.h)))
+    dp = sum(A.data .* (A.g*B.data))
     return dp
 end
 
 function dot{T<:CoordinateVector,S<:CoordinateVector}(A::T,B::S)
     A.coord=== B.coord || throw(ArgumentError("Vectors must have the same coordinates"))
-    dp = sum((A.data ./ A.h) .* (B.data ./ B.h))
+    dp = sum(A.data .* B.data)
     return dp
 end
 
@@ -21,7 +21,7 @@ function cross{T<:CoordinateVector}(A::T,B::T)
 
     for i=1:3
         for j=1:3
-            v = detJ*A[i]*B[j]/(A.h[i]*B.h[j])
+            v = detJ*A[i]*B[j]
             for k=1:3
                 AxB[k] = AxB[k] + levicivita([i,j,k])*v
             end
@@ -29,7 +29,7 @@ function cross{T<:CoordinateVector}(A::T,B::T)
     end
 
     AxB = inv(A.g)*AxB
-    return T(SVector{3}(AxB).*A.h,A.coord,A.J,A.g,A.h)
+    return T(AxB,A.coord,A.J,A.g,A.h)
 end
 
 function cross{T<:CoordinateVector,S<:CoordinateVector}(A::T,B::S)

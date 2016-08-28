@@ -1,15 +1,18 @@
-immutable Coordinate{D,T,F<:Function} <: AbstractArray{T,1}
-    u::SVector{D,T} #Coordinates
-    R::F            #Transformation (x,y,z,...) = R(u₁,u₂,u₃,...)
-end
-
-function Coordinate{T<:AbstractVector}(u::T,R::Function)
-    Coordinate(SVector{length(u),eltype(u)}(u),R)
+type Coordinate{T,F<:Function} <: AbstractArray{T,1}
+    u::Vector{T} #Coordinates
+    R::F         #Transformation (x,y,z,...) = R(u₁,u₂,u₃,...)
 end
 
 # Array Interface for Coordinates
 size(A::Coordinate) = size(A.u)
 getindex(A::Coordinate, i::Int) = A.u[i]
+setindex!{T,F}(A::Coordinate{T,F}, v::T, i::Int) = A.u[i] = v
+Base.linearindexing(::Coordinate) = Base.LinearFast()
+similar{T,F}(A::Coordinate{T,F}) = Coordinate(Array{T}(size(A)), A.R)
+similar{T}(A::Coordinate, ::Type{T}) = Coordinate(Array{T}(size(A)), A.R)
+function similar{T,N}(A::Coordinate, ::Type{T}, dims::Tuple{Vararg{Int64,N}})
+    return Coordinate(Array{T}(dims), A.R)
+end
 
 # Standard Transformations
 function Cartesian(u)

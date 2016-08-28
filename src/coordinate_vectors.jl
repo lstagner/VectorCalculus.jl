@@ -26,60 +26,62 @@ function contravariant_metric(c::Coordinate)
     g = metric(J)
 end
 
-abstract CoordinateVector{D,T} <: AbstractArray{T,1}
+abstract CoordinateVector{T} <: AbstractArray{T,1}
 
-type ContravariantVector{D,T,F} <: CoordinateVector{D,T}
-    data::SVector{D,T}       #Contravariant Components of the Vector
-    coord::Coordinate{D,T,F}  #Vector Coordinate
-    J::SMatrix{D,D,T}
-    g::SMatrix{D,D,T}
-    h::SVector{D,T}
+type ContravariantVector{T,F} <: CoordinateVector{T}
+    data::Vector{T}       #Contravariant Components of the Vector
+    coord::Coordinate{T,F}  #Vector Coordinate
+    J::Matrix{T}
+    g::Matrix{T}
+    h::Vector{T}
 end
 
-function ContravariantVector{D,T,F}(data::AbstractVector{T}, coord::Coordinate{D,T,F}; normed=true)
+function ContravariantVector{T,F}(data::AbstractVector{T}, coord::Coordinate{T,F}; unit_basis = false)
     J = covariant_basis(coord)
     g = metric(J)
     h = sqrt.(diag(g))
-    if normed
-        c = data
-    else
-        c = data.*h
+    if unit_basis
+        data = data./h
     end
-    ContravariantVector{D,T,F}(c,coord,SMatrix{D,D,T}(J),SMatrix{D,D,T}(g),SVector{D,T}(h))
+    ContravariantVector{T,F}(data, coord, J, g, h)
 end
 
-type CovariantVector{D,T,F} <: CoordinateVector{D,T}
-    data::SVector{D,T}       #Covariant Components of the Vector
-    coord::Coordinate{D,T,F}  #Vector Coordinate
-    J::SMatrix{D,D,T}
-    g::SMatrix{D,D,T}
-    h::SVector{D,T}
+type CovariantVector{T,F} <: CoordinateVector{T}
+    data::Vector{T}       #Covariant Components of the Vector
+    coord::Coordinate{T,F}  #Vector Coordinate
+    J::Matrix{T}
+    g::Matrix{T}
+    h::Vector{T}
 end
 
-function CovariantVector{D,T,F}(data::AbstractVector{T}, coord::Coordinate{D,T,F}; normed=true)
+function CovariantVector{T,F}(data::AbstractVector{T}, coord::Coordinate{T,F}; unit_basis = false)
     J = contravariant_basis(coord)
     g = metric(J)
-    h = sqrt(diag(g))
-    if normed
-        c = data
-    else
-        c = data.*h
+    h = sqrt.(diag(g))
+    if unit_basis
+        data = data./h
     end
-    CovariantVector{D,T,F}(c,coord,SMatrix{D,D,T}(J),SMatrix{D,D,T}(g),SVector{D,T}(h))
+    CovariantVector{T,F}(data, coord, J, g, h)
 end
 
 # Array Interface for CoordinateVector
 size{T<:CoordinateVector}(A::T) = size(A.data)
 getindex{T<:CoordinateVector}(A::T, i::Int) = A.data[i]
+setindex!{T}(A::CoordinateVector{T}, v::T, i::Int) = A.data[i] = v
+Base.linearindexing(::CoordinateVector) = Base.LinearFast()
 
-function convert{T<:CoordinateVector,S<:CoordinateVector}(::Type{T},x::S)
-    c = x.g*(x.data ./ x.h)
+function convert{T<:CoordinateVector,S<:CoordinateVector}(::Type{T}, x::S)
+    data = x.g*x.data
     g = inv(x.g)
     J = x.J*g
-    h = SVector(sqrt.(diag(g)))
-    T(c.*h,x.coord,J,g,h)
+    h = sqrt.(diag(g))
+    T(data, x.coord, J, g, h)
 end
 
-convert{T<:CoordinateVector}(::Type{T},x::T) = x
+convert{T<:CoordinateVector}(::Type{T}, x::T) = x
 convert(x::CovariantVector) = convert(ContravariantVector,x)
 convert(x::ContravariantVector) = convert(CovariantVector,x)
+
+function unit_basis_components{T<:CoordinateVector}(x::T)
+    return x .* x.h
+end

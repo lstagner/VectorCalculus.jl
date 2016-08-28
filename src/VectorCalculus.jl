@@ -1,9 +1,7 @@
 module VectorCalculus
 
-using ForwardDiff
-using StaticArrays
-
-import Base: dot, cross, norm, getindex, convert, size
+import Base: dot, cross, norm
+import Base: getindex, setindex!, convert, size, similar
 
 include("coordinates.jl")
 include("coordinate_vectors.jl")
@@ -16,4 +14,9 @@ export CovariantVector, ContravariantVector
 export metric
 export covariant_basis, covariant_metric
 export contravariant_basis, contravariant_metric
+export unit_basis_components
+export grad, div, laplacian,curl
+
+using ForwardDiff
+
 end

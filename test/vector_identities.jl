@@ -1,8 +1,8 @@
 function vector_identities(c)
-    A = ContravariantVector(2*randn(3),c)
-    B = ContravariantVector(2*randn(3),c)
-    C = ContravariantVector(2*randn(3),c)
-    D = ContravariantVector(2*randn(3),c)
+    A = ContravariantVector(2*randn(3),c,unit_basis=true)
+    B = ContravariantVector(2*randn(3),c,unit_basis=true)
+    C = ContravariantVector(2*randn(3),c,unit_basis=true)
+    D = ContravariantVector(2*randn(3),c,unit_basis=true)
 
     ϵ = eps(abs(float(one(eltype(A)))))
 
