@@ -17,10 +17,7 @@ function grav_field(potential::Function, u::Coordinate)
     return -grad(potential, u)
 end
 
-x = CartesianCoordinate([2.0,-1.0,3.0])
-cyl = CylindricalCoordinate([sqrt(x[1]^2 + x[2]^2), atan2(x[2],x[1]), x[3]])
-sph = SphericalCoordinate([norm(x), atan2(x[2],x[1]), acos(x[3]/norm(x))])
-
+# Scalar Field Functions
 function scalar_field(u::Coordinate)
     return u[3]*u[1]^2 + sin(u[1])*u[2]*u[3]^2
 end
@@ -55,19 +52,168 @@ function laplacian_scalar_field_spherical(u::Coordinate)
     return (6*ϕ + (θ*ϕ^2)*(2*cos(r)/r - sin(r))) + (cot(ϕ) + (2*θ*sin(r)/(r^2))*(cot(ϕ)*ϕ + 1))
 end
 
+#Vector Field Functions
+function vector_field(u)
+    V = [u[2]*u[1]^2, u[1]*u[2]^2, u[1]*u[2]*u[3]]
+    return ContravariantVector(V, u, unit_basis=true)
+end
+
+function div_vector_field_cartesian(u)
+    x,y,z = u
+    return 5*x*y
+end
+
+function curl_vector_field_cartesian(u)
+    x,y,z = u
+    return [x*z, -y*z, y^2 - x^2]
+end
+
+function vector_laplacian_cartesian(u)
+    x,y,z = u
+    return [2*y , 2*x, 0.0]
+end
+
+function div_vector_field_cylindrical(u)
+    r,θ,z = u
+    return 4*θ*r + 2*θ
+end
+
+function curl_vector_field_cylindrical(u)
+    r,θ,z = u
+    return [z, -θ*z, 2*θ^2 - r]
+end
+
+function vector_laplacian_cylindrical(u)
+    r,θ,z = u
+    return [ θ*(3 - 4/r), 2*(1 + 1/r), θ*z/r]
+end
+
+function div_vector_field_spherical(u)
+    r,θ,ϕ = u
+    return 4*θ*r + (2*θ)/sin(ϕ) + θ*(1 + ϕ*cot(ϕ))
+end
+
+function curl_vector_field_spherical(u)
+    r,θ,ϕ = u
+    return [cot(ϕ)*θ^2 - ϕ/sin(ϕ), 2*θ*ϕ, (r/sin(ϕ)) - 2*θ^2]
+end
+
+function vector_laplacian_spherical(u)
+    r,θ,ϕ = u
+    return [4*θ - (2*θ/r)*(1 + 2/sin(ϕ) + ϕ*cot(ϕ)),
+            (2*θ^2)/r + (2-θ^2)/(r*sin(ϕ)^2) + 2*(1+ ϕ*cot(ϕ)/r)/sin(ϕ),
+            (θ*ϕ/r)*(2 - 1/sin(ϕ)^2) + (θ*cot(ϕ)/r)*(1 - 4/sin(ϕ))]
+end
+
+function Φ1(c)
+    tan(prod(c))
+end
+
+function Φ2(c)
+    c[1]*sin(c[2]/c[3])^2
+end
+
+function differential_identities(c)
+
+    grad_fg1 = grad(x->Φ1(x)*Φ2(x), c)
+    grad_fg2 = Φ1(c)*grad(Φ2,c) + grad(Φ1,c)*Φ2(c)
+    @test grad_fg1 ≈ grad_fg2
+
+    div_fA1 = div(x->Φ1(x)*vector_field(x), c)
+    div_fA2 = Φ1(c)*div(vector_field,c) + dot(vector_field(c),grad(Φ1,c))
+    @test div_fA1 ≈ div_fA2
+
+    curl_fA1 = curl(x->Φ1(x)*vector_field(x), c)
+    curl_fA2 = Φ1(c)*curl(vector_field,c) + cross(grad(Φ1,c),vector_field(c))
+    @test curl_fA1 ≈ curl_fA2
+
+end
+
+function random_cartesian()
+    CartesianCoordinate(3*randn(3))
+end
+
+function random_cylindrical()
+    x = [0.0, 0.0, -3.0] + [3.0,2pi,6.0].*rand(3)
+    CylindricalCoordinate(x)
+end
+
+function random_spherical()
+    x = [0.0, 0.0, 0.0] + [3.0,2pi,pi].*rand(3)
+    SphericalCoordinate(x)
+end
+
 const ubc = unit_basis_components
 
 @testset "Differential Operations" begin
+    x = CartesianCoordinate([2.0,-1.0,3.0])
+    cyl = CylindricalCoordinate([sqrt(x[1]^2 + x[2]^2), atan2(x[2],x[1]), x[3]])
+    sph = SphericalCoordinate([norm(x), atan2(x[2],x[1]), acos(x[3]/norm(x))])
+
     f = norm(grav_field(grav_potential_cartesian, x))
     @test f ≈ norm(grav_field(grav_potential_cylindrical, cyl))
     @test f ≈ norm(grav_field(grav_potential_spherical, sph))
 
-    @test ubc(grad(scalar_field, x)) ≈ grad_scalar_field_cartesian(x)
-    @test ubc(grad(scalar_field, cyl)) ≈ grad_scalar_field_cylindrical(cyl)
-    @test ubc(grad(scalar_field, sph)) ≈ grad_scalar_field_spherical(sph)
+    x = random_cartesian()
+    cyl = random_cylindrical()
+    sph = random_spherical()
+    println("Testing Gradient...")
+    tic()
+    @testset "Gradient" begin
+        @test ubc(grad(scalar_field, x)) ≈ grad_scalar_field_cartesian(x)
+        @test ubc(grad(scalar_field, cyl)) ≈ grad_scalar_field_cylindrical(cyl)
+        @test ubc(grad(scalar_field, sph)) ≈ grad_scalar_field_spherical(sph)
+    end
+    toc()
 
-    @test laplacian(scalar_field, x) ≈ laplacian_scalar_field_cartesian(x)
-    @test laplacian(scalar_field, cyl) ≈ laplacian_scalar_field_cylindrical(cyl)
-    @test laplacian(scalar_field, sph) ≈ laplacian_scalar_field_spherical(sph)
+    println("Testing Laplacian...")
+    tic()
+    @testset "Laplacian" begin
+        @test laplacian(scalar_field, x) ≈ laplacian_scalar_field_cartesian(x)
+        @test laplacian(scalar_field, cyl) ≈ laplacian_scalar_field_cylindrical(cyl)
+        @test laplacian(scalar_field, sph) ≈ laplacian_scalar_field_spherical(sph)
+    end
+    toc()
+
+    println("Testing Divergence...")
+    tic()
+    @testset "Divergence" begin
+        @test div(vector_field, x) ≈ div_vector_field_cartesian(x)
+        @test div(vector_field, cyl) ≈ div_vector_field_cylindrical(cyl)
+        @test div(vector_field, sph) ≈ div_vector_field_spherical(sph)
+    end
+    toc()
+
+    println("Testing Curl...")
+    tic()
+    @testset "Curl" begin
+        @test ubc(curl(vector_field, x)) ≈ curl_vector_field_cartesian(x)
+        @test ubc(curl(vector_field, cyl)) ≈ curl_vector_field_cylindrical(cyl)
+        @test ubc(curl(vector_field, sph)) ≈ curl_vector_field_spherical(sph)
+    end
+    toc()
+
+    println("Testing Vector Laplacian...")
+    tic()
+    @testset "Vector Laplacian" begin
+        @test ubc(vector_laplacian(vector_field, x)) ≈ vector_laplacian_cartesian(x)
+        @test ubc(vector_laplacian(vector_field, cyl)) ≈ vector_laplacian_cylindrical(cyl)
+        @test ubc(vector_laplacian(vector_field, sph)) ≈ vector_laplacian_spherical(sph)
+    end
+    toc()
+
+    println("Testing Differential Identities...")
+    tic()
+    @testset "Differential Identities" begin
+        @testset "Cartesian" begin
+            differential_identities(x)
+        end
+        @testset "Cylindrical" begin
+            differential_identities(cyl)
+        end
+        @testset "Spherical" begin
+            differential_identities(sph)
+        end
+    end
+    toc()
 end
-

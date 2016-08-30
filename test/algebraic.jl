@@ -1,8 +1,8 @@
 function vector_identities(c)
     A = ContravariantVector(2*randn(3),c,unit_basis=true)
     B = ContravariantVector(2*randn(3),c,unit_basis=true)
-    C = ContravariantVector(2*randn(3),c,unit_basis=true)
-    D = ContravariantVector(2*randn(3),c,unit_basis=true)
+    C = CovariantVector(2*randn(3),c,unit_basis=true)
+    D = CovariantVector(2*randn(3),c,unit_basis=true)
 
     ϵ = eps(abs(float(one(eltype(A)))))
 
@@ -26,17 +26,22 @@ function vector_identities(c)
     @test isapprox(AxBxCxD, (dot(cross(A,B),D)*C - dot(cross(A,B),C)*D), atol=2000ϵ)
 end
 
-@testset "Vector Identities: Cartesian" begin
-    c = CartesianCoordinate([2.0,-1.0,1.5])
-    vector_identities(c);
-end
-
-@testset "Vector Identities: Cylindrical" begin
-    c = CylindricalCoordinate([2.0,pi/4,-1.0])
-    vector_identities(c);
-end
-
-@testset "Vector Identities: Spherical" begin
-    c = SphericalCoordinate([2.0,pi/4,pi/3])
-    vector_identities(c);
+@testset "Algebraic Operations" begin
+    println("Testing Algebraic Identities...")
+    tic()
+    @testset "Algebraic Identities" begin
+        @testset "Cartesian" begin
+            c = CartesianCoordinate([2.0,-1.0,1.5])
+            vector_identities(c);
+        end
+        @testset "Cylindrical" begin
+            c = CylindricalCoordinate([2.0,pi/4,-1.0])
+            vector_identities(c);
+        end
+        @testset "Spherical" begin
+            c = SphericalCoordinate([2.0,pi/4,pi/3])
+            vector_identities(c);
+        end
+    end
+    toc()
 end

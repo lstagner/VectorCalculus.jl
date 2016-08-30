@@ -4,7 +4,7 @@ function metric{T}(J::AbstractArray{T,2})
     return g
 end
 
-function covariant_basis(c::Coordinate)
+function covariant_basis{T}(c::Coordinate{T})
     return ForwardDiff.jacobian(c.R,c.u)
 end
 
