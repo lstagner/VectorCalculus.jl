@@ -1,9 +1,14 @@
 module VectorCalculus
 
 using ForwardDiff
+using LinearAlgebra
 
-import Base: dot, cross, norm, div
-import Base: getindex, setindex!, convert, size, similar
+import LinearAlgebra: dot, cross, norm, div
+import Base: div
+import Base: div, getindex, setindex!, convert, size, similar, parent, axes, IndexStyle
+
+using Base: @propagate_inbounds
+
 using Combinatorics: levicivita
 
 include("coordinates.jl")

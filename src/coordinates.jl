@@ -1,17 +1,22 @@
-type Coordinate{T,F<:Function} <: AbstractArray{T,1}
+struct Coordinate{T,F<:Function} <: AbstractArray{T,1}
     u::Vector{T} #Coordinates
     R::F         #Transformation (x,y,z,...) = R(u₁,u₂,u₃,...)
 end
 
 # Array Interface for Coordinates
-size(A::Coordinate) = size(A.u)
-getindex(A::Coordinate, i::Int) = A.u[i]
-setindex!{T,F}(A::Coordinate{T,F}, v::T, i::Int) = A.u[i] = v
-Base.linearindexing(::Coordinate) = Base.LinearFast()
-similar{T,F}(A::Coordinate{T,F}) = Coordinate(Array{T}(size(A)), A.R)
-similar{T}(A::Coordinate, ::Type{T}) = Coordinate(Array{T}(size(A)), A.R)
-function similar{T,N}(A::Coordinate, ::Type{T}, dims::Tuple{Vararg{Int64,N}})
-    return Coordinate(Array{T}(dims), A.R)
+parent(A::T) where {T<:Coordinate} = A.u
+size(A::T) where {T<:Coordinate} = size(A.u)
+axes(A::T) where {T<:Coordinate} = axes(A.u)
+parenttype(::Type{Coordinate{T,F}}) where {T,F} = Vector{T}
+IndexStyle(::Type{T}) where {T<:Coordinate} = IndexStyle(parenttype(T))
+
+@propagate_inbounds getindex(A::T, i::Int) where {T<:Coordinate} = A.u[i]
+@propagate_inbounds setindex!(A::Coordinate{T}, v::T, i::Int) where {T} = A.u[i] = v
+
+similar(A::Coordinate{T,F}) where {T,F} = Coordinate(Array{T}(undef, size(A)), A.R)
+similar(A::Coordinate, ::Type{T}) where {T} = Coordinate(Array{T}(undef, size(A)), A.R)
+function similar(A::Coordinate, ::Type{T}, dims::Tuple{Vararg{Int64,N}}) where {T,N}
+    return Coordinate(Array{T}(undef,dims), A.R)
 end
 
 # Standard Transformations

@@ -1,68 +1,68 @@
-function Base.:+{T<:CoordinateVector}(A::T,B::T)
+function Base.:+(A::T,B::T) where T <: CoordinateVector
     A.coord == B.coord || throw(ArgumentError("Vectors must have the same coordinates"))
     return T(A.data .+ B.data, A.coord, A.J, A.g, A.h)
 end
 
-function Base.:+{T<:CoordinateVector,S<:CoordinateVector}(A::T,B::S)
+function Base.:+(A::T,B::S) where {T<:CoordinateVector, S<:CoordinateVector}
     return A + convert(B)
 end
 
-function Base.:+{T<:Real,S<:CoordinateVector}(a::T,x::S)
+function Base.:+(a::T,x::S) where {T<:Real, S<:CoordinateVector}
     return S(x.data+a,x.coord,x.J,x.g,x.h)
 end
 
-function Base.:+{T<:CoordinateVector,S<:Real}(x::T,a::S)
+function Base.:+(x::T,a::S) where {T<:CoordinateVector, S<:Real}
     return T(x.data + a,x.coord,x.J,x.g,x.h)
 end
 
-function Base.:-{T<:CoordinateVector}(A::T,B::T)
+function Base.:-(A::T,B::T) where {T<:CoordinateVector}
     A.coord == B.coord || throw(ArgumentError("Vectors must have the same coordinates"))
     return T(A.data .- B.data, A.coord, A.J, A.g, A.h)
 end
 
-function Base.:-{T<:CoordinateVector,S<:CoordinateVector}(A::T,B::S)
+function Base.:-(A::T,B::S) where {T<:CoordinateVector,S<:CoordinateVector}
     return A - convert(B)
 end
 
-function Base.:-{T<:Real,S<:CoordinateVector}(a::T,x::S)
+function Base.:-(a::T,x::S) where {T<:Real,S<:CoordinateVector}
     return S(a - x.data,x.coord,x.J,x.g,x.h)
 end
 
-function Base.:-{T<:CoordinateVector,S<:Real}(x::T,a::S)
+function Base.:-(x::T,a::S) where {T<:CoordinateVector,S<:Real}
     return T(x.data - a,x.coord,x.J,x.g,x.h)
 end
 
-function Base.:*{T<:Real,S<:CoordinateVector}(a::T,x::S)
+function Base.:*(a::T,x::S) where {T<:Real,S<:CoordinateVector}
     return S(a*x.data,x.coord,x.J,x.g,x.h)
 end
 
-function Base.:*{T<:CoordinateVector,S<:Real}(x::T,a::S)
+function Base.:*(x::T,a::S) where {T<:CoordinateVector,S<:Real}
     return T(a*x.data,x.coord,x.J,x.g,x.h)
 end
 
-function Base.:/{T<:Real,S<:CoordinateVector}(a::T,x::S)
+function Base.:/(a::T,x::S) where {T<:Real,S<:CoordinateVector}
     return S(a./ x.data,x.coord,x.J,x.g,x.h)
 end
 
-function Base.:/{T<:CoordinateVector,S<:Real}(x::T,a::S)
+function Base.:/(x::T,a::S) where {T<:CoordinateVector,S<:Real}
     return T(x.data/a,x.coord,x.J,x.g,x.h)
 end
 
-function dot{T<:CoordinateVector}(A::T,B::T)
+function dot(A::T,B::T) where {T<:CoordinateVector}
     A.coord === B.coord || throw(ArgumentError("Vectors must have the same coordinates"))
     dp = sum(A.data .* (A.g*B.data))
     return dp
 end
 
-function dot{T<:CoordinateVector,S<:CoordinateVector}(A::T,B::S)
+function dot(A::T,B::S) where {T<:CoordinateVector,S<:CoordinateVector}
     A.coord === B.coord || throw(ArgumentError("Vectors must have the same coordinates"))
     dp = sum(A.data .* B.data)
     return dp
 end
 
-norm{T<:CoordinateVector}(x::T) = sqrt(dot(x,x))
+norm(x::T) where {T<:CoordinateVector} = sqrt(dot(x,x))
 
-function cross{T<:CoordinateVector}(A::T,B::T)
+function cross(A::T,B::T) where {T<:CoordinateVector}
     A.coord === B.coord || throw(ArgumentError("Vectors must have the same coordinates"))
     length(A) == 3 || throw(DomainError("Cross product only defined for 3-vectors"))
     AxB = zeros(eltype(A),3)
@@ -81,6 +81,6 @@ function cross{T<:CoordinateVector}(A::T,B::T)
     return T(AxB,A.coord,A.J,A.g,A.h)
 end
 
-function cross{T<:CoordinateVector,S<:CoordinateVector}(A::T,B::S)
+function cross(A::T,B::S) where {T<:CoordinateVector,S<:CoordinateVector}
     return cross(A,convert(B))
 end

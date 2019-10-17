@@ -28,7 +28,6 @@ end
 
 @testset "Algebraic Operations" begin
     println("Testing Algebraic Identities...")
-    tic()
     @testset "Algebraic Identities" begin
         @testset "Cartesian" begin
             c = CartesianCoordinate([2.0,-1.0,1.5])
@@ -43,5 +42,4 @@ end
             vector_identities(c);
         end
     end
-    toc()
 end

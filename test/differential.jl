@@ -147,8 +147,8 @@ const ubc = unit_basis_components
 
 @testset "Differential Operations" begin
     x = CartesianCoordinate([2.0,-1.0,3.0])
-    cyl = CylindricalCoordinate([sqrt(x[1]^2 + x[2]^2), atan2(x[2],x[1]), x[3]])
-    sph = SphericalCoordinate([norm(x), atan2(x[2],x[1]), acos(x[3]/norm(x))])
+    cyl = CylindricalCoordinate([sqrt(x[1]^2 + x[2]^2), atan(x[2],x[1]), x[3]])
+    sph = SphericalCoordinate([norm(x), atan(x[2],x[1]), acos(x[3]/norm(x))])
 
     f = norm(grav_field(grav_potential_cartesian, x))
     @test f ≈ norm(grav_field(grav_potential_cylindrical, cyl))
@@ -158,52 +158,41 @@ const ubc = unit_basis_components
     cyl = random_cylindrical()
     sph = random_spherical()
     println("Testing Gradient...")
-    tic()
     @testset "Gradient" begin
         @test ubc(grad(scalar_field, x)) ≈ grad_scalar_field_cartesian(x)
         @test ubc(grad(scalar_field, cyl)) ≈ grad_scalar_field_cylindrical(cyl)
         @test ubc(grad(scalar_field, sph)) ≈ grad_scalar_field_spherical(sph)
     end
-    toc()
 
     println("Testing Laplacian...")
-    tic()
     @testset "Laplacian" begin
         @test laplacian(scalar_field, x) ≈ laplacian_scalar_field_cartesian(x)
         @test laplacian(scalar_field, cyl) ≈ laplacian_scalar_field_cylindrical(cyl)
         @test laplacian(scalar_field, sph) ≈ laplacian_scalar_field_spherical(sph)
     end
-    toc()
 
     println("Testing Divergence...")
-    tic()
     @testset "Divergence" begin
         @test div(vector_field, x) ≈ div_vector_field_cartesian(x)
         @test div(vector_field, cyl) ≈ div_vector_field_cylindrical(cyl)
         @test div(vector_field, sph) ≈ div_vector_field_spherical(sph)
     end
-    toc()
 
     println("Testing Curl...")
-    tic()
     @testset "Curl" begin
         @test ubc(curl(vector_field, x)) ≈ curl_vector_field_cartesian(x)
         @test ubc(curl(vector_field, cyl)) ≈ curl_vector_field_cylindrical(cyl)
         @test ubc(curl(vector_field, sph)) ≈ curl_vector_field_spherical(sph)
     end
-    toc()
 
     println("Testing Vector Laplacian...")
-    tic()
     @testset "Vector Laplacian" begin
         @test ubc(vector_laplacian(vector_field, x)) ≈ vector_laplacian_cartesian(x)
         @test ubc(vector_laplacian(vector_field, cyl)) ≈ vector_laplacian_cylindrical(cyl)
         @test ubc(vector_laplacian(vector_field, sph)) ≈ vector_laplacian_spherical(sph)
     end
-    toc()
 
     println("Testing Differential Identities...")
-    tic()
     @testset "Differential Identities" begin
         @testset "Cartesian" begin
             differential_identities(x)
@@ -215,5 +204,4 @@ const ubc = unit_basis_components
             differential_identities(sph)
         end
     end
-    toc()
 end

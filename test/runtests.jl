@@ -1,7 +1,11 @@
+using Test
+using Random
 using VectorCalculus
-using Base.Test
+
+Random.seed!(1234)
 
 @testset "VectorCalculus" begin
+    using LinearAlgebra
     include("algebraic.jl")
     include("differential.jl")
 end

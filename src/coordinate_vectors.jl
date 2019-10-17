@@ -1,10 +1,9 @@
-function metric{T}(J::AbstractArray{T,2})
-    N = size(J,2)
-    g = T[dot(J[:,i],J[:,j]) for i=1:N, j=1:N]
+function metric(J::AbstractArray{T,2}) where {T}
+    g = J'*J
     return g
 end
 
-function covariant_basis{T}(c::Coordinate{T})
+function covariant_basis(c::Coordinate{T}) where {T}
     return ForwardDiff.jacobian(c.R,c.u)
 end
 
@@ -26,9 +25,9 @@ function contravariant_metric(c::Coordinate)
     g = metric(J)
 end
 
-abstract CoordinateVector{T} <: AbstractArray{T,1}
+abstract type CoordinateVector{T} <: AbstractArray{T,1} end
 
-type ContravariantVector{T,F} <: CoordinateVector{T}
+struct ContravariantVector{T,F} <: CoordinateVector{T}
     data::Vector{T}       #Contravariant Components of the Vector
     coord::Coordinate{T,F}  #Vector Coordinate
     J::Matrix{T}
@@ -36,7 +35,7 @@ type ContravariantVector{T,F} <: CoordinateVector{T}
     h::Vector{T}
 end
 
-function ContravariantVector{T,F}(data::AbstractVector{T}, coord::Coordinate{T,F}; unit_basis = false)
+function ContravariantVector(data::AbstractVector{T}, coord::Coordinate{T,F}; unit_basis = false) where {T,F}
     J = covariant_basis(coord)
     g = metric(J)
     h = sqrt.(diag(g))
@@ -46,7 +45,7 @@ function ContravariantVector{T,F}(data::AbstractVector{T}, coord::Coordinate{T,F
     ContravariantVector{T,F}(data, coord, J, g, h)
 end
 
-type CovariantVector{T,F} <: CoordinateVector{T}
+struct CovariantVector{T,F} <: CoordinateVector{T}
     data::Vector{T}       #Covariant Components of the Vector
     coord::Coordinate{T,F}  #Vector Coordinate
     J::Matrix{T}
@@ -54,7 +53,7 @@ type CovariantVector{T,F} <: CoordinateVector{T}
     h::Vector{T}
 end
 
-function CovariantVector{T,F}(data::AbstractVector{T}, coord::Coordinate{T,F}; unit_basis = false)
+function CovariantVector(data::AbstractVector{T}, coord::Coordinate{T,F}; unit_basis = false) where {T,F}
     J = contravariant_basis(coord)
     g = metric(J)
     h = sqrt.(diag(g))
@@ -65,12 +64,16 @@ function CovariantVector{T,F}(data::AbstractVector{T}, coord::Coordinate{T,F}; u
 end
 
 # Array Interface for CoordinateVector
-size{T<:CoordinateVector}(A::T) = size(A.data)
-getindex{T<:CoordinateVector}(A::T, i::Int) = A.data[i]
-setindex!{T}(A::CoordinateVector{T}, v::T, i::Int) = A.data[i] = v
-Base.linearindexing(::CoordinateVector) = Base.LinearFast()
+parent(A::T) where {T<:CoordinateVector} = A.data
+size(A::T) where {T<:CoordinateVector} = size(A.data)
+axes(A::T) where {T<:CoordinateVector} = axes(A.data)
+parenttype(::Type{CoordinateVector{T}}) where {T} = Vector{T}
+IndexStyle(::Type{T}) where {T<:CoordinateVector} = IndexStyle(parenttype(T))
 
-function convert{T<:CoordinateVector,S<:CoordinateVector}(::Type{T}, x::S)
+@propagate_inbounds getindex(A::T, i::Int) where {T<:CoordinateVector} = A.data[i]
+@propagate_inbounds setindex!(A::CoordinateVector{T}, v::T, i::Int) where {T} = A.data[i] = v
+
+function convert(::Type{T}, x::S) where {T<:CoordinateVector,S<:CoordinateVector}
     data = x.g*x.data
     g = inv(x.g)
     J = x.J*g
@@ -78,10 +81,10 @@ function convert{T<:CoordinateVector,S<:CoordinateVector}(::Type{T}, x::S)
     T(data, x.coord, J, g, h)
 end
 
-convert{T<:CoordinateVector}(::Type{T}, x::T) = x
+convert(::Type{T}, x::T) where {T<:CoordinateVector} = x
 convert(x::CovariantVector) = convert(ContravariantVector,x)
 convert(x::ContravariantVector) = convert(CovariantVector,x)
 
-function unit_basis_components{T<:CoordinateVector}(x::T)
+function unit_basis_components(x::T) where {T<:CoordinateVector}
     return x .* x.h
 end
