@@ -6,24 +6,23 @@ function vector_identities(c)
 
     ϵ = eps(abs(float(one(eltype(A)))))
 
-    A_BxC = dot(A,cross(B,C))
-    @test isapprox(A_BxC, dot(cross(A,B),C), atol=500ϵ)
-    @test isapprox(A_BxC, dot(B,cross(C,A)), atol=500ϵ)
-    @test isapprox(A_BxC, dot(cross(B,C),A), atol=500ϵ)
-    @test isapprox(A_BxC, dot(C,cross(A,B)), atol=500ϵ)
-    @test isapprox(A_BxC, dot(cross(C,A),B), atol=500ϵ)
+    A_BxC = A ⋅ (B × C)
+    @test A_BxC ≈ (A × B) ⋅ C  atol=500ϵ
+    @test A_BxC ≈ B ⋅ (C × A)   atol=500ϵ
+    @test A_BxC ≈ (B × C) ⋅ A   atol=500ϵ
+    @test A_BxC ≈ C ⋅ (A × B)   atol=500ϵ
+    @test A_BxC ≈ (C × A) ⋅ B   atol=500ϵ
 
     AxBxC = cross(A,cross(B,C))
-    @test isapprox(AxBxC, cross(cross(C,B),A), atol=500ϵ)
-    @test isapprox(AxBxC, dot(A,C)*B - dot(A,B)*C, atol=500ϵ)
+    AxBxC = A × (B × C)
+    @test AxBxC ≈ (C × B) × A atol=500ϵ
+    @test AxBxC ≈ (A ⋅ C)*B - (A ⋅ B)*C atol=500ϵ
 
-    @test isapprox(cross(A,cross(B,C)) + cross(B,cross(C,A)) + cross(C,cross(A,B)), zeros(eltype(A),length(A)), atol=2000ϵ)
+    @test A × (B × C) + B × (C × A) + C × (A × B) ≈ zeros(eltype(A),length(A)) atol=2000ϵ
 
-    AxB_CxD = dot(cross(A,B),cross(C,D))
-    @test isapprox(AxB_CxD, dot(A,C)*dot(B,D) - dot(A,D)*dot(B,C), atol=2000ϵ)
+    @test (A × B) ⋅ (C × D) ≈ (A ⋅ C)*(B ⋅ D) - (A ⋅ D)*(B ⋅ C) atol=2000ϵ
 
-    AxBxCxD = cross(cross(A,B),cross(C,D))
-    @test isapprox(AxBxCxD, (dot(cross(A,B),D)*C - dot(cross(A,B),C)*D), atol=2000ϵ)
+    @test (A × B) × (C × D) ≈ ((A × B) ⋅ D)*C - ((A × B) ⋅ C)*D atol=2000ϵ
 end
 
 @testset "Algebraic Operations" begin

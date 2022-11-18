@@ -3,7 +3,7 @@ module VectorCalculus
 using ForwardDiff
 using LinearAlgebra
 
-import LinearAlgebra: dot, cross, norm, div
+import LinearAlgebra: dot, cross, norm, div, ⋅, ×
 import Base: div
 import Base: div, getindex, setindex!, convert, size, similar, parent, axes, IndexStyle
 
@@ -25,5 +25,6 @@ export covariant_basis, covariant_metric
 export contravariant_basis, contravariant_metric
 export unit_basis_components
 export grad, laplacian, curl, vector_laplacian
+export ⋅, ×, DelOperator, ∇, Δ, ∇²
 
 end

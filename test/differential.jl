@@ -14,7 +14,7 @@ function grav_potential_spherical(u)
 end
 
 function grav_field(potential::Function, u::Coordinate)
-    return -grad(potential, u)
+    return -∇(potential, u)
 end
 
 # Scalar Field Functions
@@ -105,27 +105,21 @@ function vector_laplacian_spherical(u)
             (θ*ϕ/r)*(2 - 1/sin(ϕ)^2) + (θ*cot(ϕ)/r)*(1 - 4/sin(ϕ))]
 end
 
-function Φ1(c)
+function Φ₁(c)
     tan(prod(c))
 end
 
-function Φ2(c)
+function Φ₂(c)
     c[1]*sin(c[2]/c[3])^2
 end
 
 function differential_identities(c)
 
-    grad_fg1 = grad(x->Φ1(x)*Φ2(x), c)
-    grad_fg2 = Φ1(c)*grad(Φ2,c) + grad(Φ1,c)*Φ2(c)
-    @test grad_fg1 ≈ grad_fg2
+    @test ∇(x->Φ₁(x)*Φ₂(x), c) ≈ Φ₁(c)*∇(Φ₂,c) + ∇(Φ₁,c)*Φ₂(c)
 
-    div_fA1 = div(x->Φ1(x)*vector_field(x), c)
-    div_fA2 = Φ1(c)*div(vector_field,c) + dot(vector_field(c),grad(Φ1,c))
-    @test div_fA1 ≈ div_fA2
+    @test ∇ ⋅ (x->Φ₁(x)*vector_field(x), c) ≈ Φ₁(c) * ∇ ⋅ (vector_field,c) + vector_field(c) ⋅ ∇(Φ₁,c)
 
-    curl_fA1 = curl(x->Φ1(x)*vector_field(x), c)
-    curl_fA2 = Φ1(c)*curl(vector_field,c) + cross(grad(Φ1,c),vector_field(c))
-    @test curl_fA1 ≈ curl_fA2
+    @test ∇ × (x->Φ₁(x)*vector_field(x), c) ≈ Φ₁(c) * ∇ × (vector_field,c) + (∇(Φ₁,c) × vector_field(c))
 
 end
 
@@ -159,37 +153,37 @@ const ubc = unit_basis_components
     sph = random_spherical()
     println("Testing Gradient...")
     @testset "Gradient" begin
-        @test ubc(grad(scalar_field, x)) ≈ grad_scalar_field_cartesian(x)
-        @test ubc(grad(scalar_field, cyl)) ≈ grad_scalar_field_cylindrical(cyl)
-        @test ubc(grad(scalar_field, sph)) ≈ grad_scalar_field_spherical(sph)
+        @test ubc(∇(scalar_field, x)) ≈ grad_scalar_field_cartesian(x)
+        @test ubc(∇(scalar_field, cyl)) ≈ grad_scalar_field_cylindrical(cyl)
+        @test ubc(∇(scalar_field, sph)) ≈ grad_scalar_field_spherical(sph)
     end
 
     println("Testing Laplacian...")
     @testset "Laplacian" begin
-        @test laplacian(scalar_field, x) ≈ laplacian_scalar_field_cartesian(x)
-        @test laplacian(scalar_field, cyl) ≈ laplacian_scalar_field_cylindrical(cyl)
-        @test laplacian(scalar_field, sph) ≈ laplacian_scalar_field_spherical(sph)
+        @test Δ(scalar_field, x) ≈ laplacian_scalar_field_cartesian(x)
+        @test Δ(scalar_field, cyl) ≈ laplacian_scalar_field_cylindrical(cyl)
+        @test Δ(scalar_field, sph) ≈ laplacian_scalar_field_spherical(sph)
     end
 
     println("Testing Divergence...")
     @testset "Divergence" begin
-        @test div(vector_field, x) ≈ div_vector_field_cartesian(x)
-        @test div(vector_field, cyl) ≈ div_vector_field_cylindrical(cyl)
-        @test div(vector_field, sph) ≈ div_vector_field_spherical(sph)
+        @test ∇ ⋅ (vector_field, x) ≈ div_vector_field_cartesian(x)
+        @test ∇ ⋅ (vector_field, cyl) ≈ div_vector_field_cylindrical(cyl)
+        @test ∇ ⋅ (vector_field, sph) ≈ div_vector_field_spherical(sph)
     end
 
     println("Testing Curl...")
     @testset "Curl" begin
-        @test ubc(curl(vector_field, x)) ≈ curl_vector_field_cartesian(x)
-        @test ubc(curl(vector_field, cyl)) ≈ curl_vector_field_cylindrical(cyl)
-        @test ubc(curl(vector_field, sph)) ≈ curl_vector_field_spherical(sph)
+        @test ubc(∇ × (vector_field, x)) ≈ curl_vector_field_cartesian(x)
+        @test ubc(∇ × (vector_field, cyl)) ≈ curl_vector_field_cylindrical(cyl)
+        @test ubc(∇ × (vector_field, sph)) ≈ curl_vector_field_spherical(sph)
     end
 
     println("Testing Vector Laplacian...")
     @testset "Vector Laplacian" begin
-        @test ubc(vector_laplacian(vector_field, x)) ≈ vector_laplacian_cartesian(x)
-        @test ubc(vector_laplacian(vector_field, cyl)) ≈ vector_laplacian_cylindrical(cyl)
-        @test ubc(vector_laplacian(vector_field, sph)) ≈ vector_laplacian_spherical(sph)
+        @test ubc(∇²(vector_field, x)) ≈ vector_laplacian_cartesian(x)
+        @test ubc(∇²(vector_field, cyl)) ≈ vector_laplacian_cylindrical(cyl)
+        @test ubc(∇²(vector_field, sph)) ≈ vector_laplacian_spherical(sph)
     end
 
     println("Testing Differential Identities...")

@@ -60,6 +60,10 @@ function dot(A::T,B::S) where {T<:CoordinateVector,S<:CoordinateVector}
     return dp
 end
 
+function ⋅(A,B)
+    dot(A,B)
+end
+
 norm(x::T) where {T<:CoordinateVector} = sqrt(dot(x,x))
 
 function cross(A::T,B::T) where {T<:CoordinateVector}
@@ -83,4 +87,8 @@ end
 
 function cross(A::T,B::S) where {T<:CoordinateVector,S<:CoordinateVector}
     return cross(A,convert(B))
+end
+
+function ×(A, B)
+    return cross(A,B)
 end
