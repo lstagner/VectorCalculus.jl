@@ -67,7 +67,7 @@ end
 parent(A::T) where {T<:CoordinateVector} = A.data
 size(A::T) where {T<:CoordinateVector} = size(A.data)
 axes(A::T) where {T<:CoordinateVector} = axes(A.data)
-parenttype(::Type{CoordinateVector{T}}) where {T} = Vector{T}
+parenttype(::Type{S}) where S <: CoordinateVector{T} where T = Vector{T}
 IndexStyle(::Type{T}) where {T<:CoordinateVector} = IndexStyle(parenttype(T))
 
 @propagate_inbounds getindex(A::T, i::Int) where {T<:CoordinateVector} = A.data[i]
