@@ -7,8 +7,8 @@ const ∇ = DelOperator
 Base.:*(::Type{∇}, x::T) where T = DelOperator{T}(x)
 Base.:*(x::T, ::Type{∇}) where T = DelOperator{T}(x)
 
-function grad(Φ::Function, u::Coordinate)
-    components = ForwardDiff.gradient(Φ, u)
+function grad(Φ::Function, u::Coordinate{N}) where N
+    components = SVector{N}(Zygote.gradient(Φ, u)[1])
     return CovariantVector(components, u)
 end
 
@@ -20,7 +20,7 @@ function div(A::Function, u::Coordinate)
         a = convert(ContravariantVector, A(x))
         det(a.J) .* a
     end
-    return sum(diag(ForwardDiff.jacobian(detJA, u)))./detJ
+    return sum(diag(Zygote.jacobian(detJA, u)[1]))./detJ
 end
 
 ⋅(::Type{∇},args::Tuple{Function,Coordinate}) = div(args...)
@@ -32,14 +32,14 @@ end
 
 Δ(Φ::Function, u::Coordinate) = laplacian(Φ, u)
 
-function curl(A::Function, u::Coordinate)
+function curl(A::Function, u::Coordinate{N}) where N
     n = length(u)
     J = covariant_basis(u)
     detJ = det(J)
     function coA(x)
         convert(CovariantVector, A(x))
     end
-    dA = ForwardDiff.jacobian(coA, u)
+    dA = Zygote.jacobian(coA, u)[1]
 
     curlA = zeros(eltype(u),n)
     for k=1:n
@@ -50,7 +50,7 @@ function curl(A::Function, u::Coordinate)
             end
         end
     end
-    return ContravariantVector(curlA,u)
+    return ContravariantVector(SVector{N}(curlA),u)
 end
 
 ×(::Type{∇},args::Tuple{Function,Coordinate}) = curl(args...)

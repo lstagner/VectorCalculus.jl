@@ -1,6 +1,6 @@
 module VectorCalculus
 
-using ForwardDiff
+using Zygote
 using LinearAlgebra
 
 import LinearAlgebra: dot, cross, norm, div, ⋅, ×
@@ -10,6 +10,8 @@ import Base: div, getindex, setindex!, convert, size, similar, parent, axes, Ind
 using Base: @propagate_inbounds
 
 using Combinatorics: levicivita
+
+using StaticArrays
 
 include("coordinates.jl")
 include("coordinate_vectors.jl")

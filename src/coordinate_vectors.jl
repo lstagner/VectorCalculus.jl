@@ -3,8 +3,8 @@ function metric(J::AbstractArray{T,2}) where {T}
     return g
 end
 
-function covariant_basis(c::Coordinate{T}) where {T}
-    return ForwardDiff.jacobian(c.R,c.u)
+function covariant_basis(c::Coordinate{N,T}) where {N,T}
+    return SMatrix{N,N}(Zygote.jacobian(c.R,c.u)[1])
 end
 
 function covariant_metric(c::Coordinate)
@@ -25,53 +25,59 @@ function contravariant_metric(c::Coordinate)
     g = metric(J)
 end
 
-abstract type CoordinateVector{T} <: AbstractArray{T,1} end
+abstract type CoordinateVector{N,T} <: AbstractArray{T,1} end
 
-struct ContravariantVector{T,F} <: CoordinateVector{T}
-    data::Vector{T}       #Contravariant Components of the Vector
-    coord::Coordinate{T,F}  #Vector Coordinate
-    J::Matrix{T}
-    g::Matrix{T}
-    h::Vector{T}
+struct ContravariantVector{N,T} <: CoordinateVector{N,T}
+    data::SVector{N,T}       #Contravariant Components of the Vector
+    coord::Coordinate{N,T}  #Vector Coordinate
+    J::SMatrix{N,N,T}
+    g::SMatrix{N,N,T}
+    h::SVector{N,T}
 end
 
-function ContravariantVector(data::AbstractVector{T}, coord::Coordinate{T,F}; unit_basis = false) where {T,F}
+function ContravariantVector(d::AbstractVector{T}, coord::Coordinate{N,T}; unit_basis = false) where {N,T}
+    data = SVector{N}(d)
     J = covariant_basis(coord)
     g = metric(J)
     h = sqrt.(diag(g))
     if unit_basis
         data = data./h
     end
-    ContravariantVector{T,F}(data, coord, J, g, h)
+    ContravariantVector(data, coord, J, g, h)
 end
 
-struct CovariantVector{T,F} <: CoordinateVector{T}
-    data::Vector{T}       #Covariant Components of the Vector
-    coord::Coordinate{T,F}  #Vector Coordinate
-    J::Matrix{T}
-    g::Matrix{T}
-    h::Vector{T}
+struct CovariantVector{N,T} <: CoordinateVector{N,T}
+    data::SVector{N,T}       #Covariant Components of the Vector
+    coord::Coordinate{N,T}  #Vector Coordinate
+    J::SMatrix{N,N,T}
+    g::SMatrix{N,N,T}
+    h::SVector{N,T}
 end
 
-function CovariantVector(data::AbstractVector{T}, coord::Coordinate{T,F}; unit_basis = false) where {T,F}
+function CovariantVector(d::AbstractVector{T}, coord::Coordinate{N,T}; unit_basis = false) where {N,T}
+    data = SVector{N}(d)
     J = contravariant_basis(coord)
     g = metric(J)
     h = sqrt.(diag(g))
     if unit_basis
         data = data./h
     end
-    CovariantVector{T,F}(data, coord, J, g, h)
+    CovariantVector(data, coord, J, g, h)
 end
+
+using Zygote: @adjoint
+@adjoint CovariantVector(d, u; kwargs...) = CovariantVector(d,u; kwargs...), c⁻ -> (c⁻.data,c⁻.coord)
+@adjoint ContravariantVector(d,u; kwargs...) = ContravariantVector(d,u; kwargs...), c⁻ -> (c⁻.data,c⁻.coord)
 
 # Array Interface for CoordinateVector
 parent(A::T) where {T<:CoordinateVector} = A.data
 size(A::T) where {T<:CoordinateVector} = size(A.data)
 axes(A::T) where {T<:CoordinateVector} = axes(A.data)
-parenttype(::Type{S}) where S <: CoordinateVector{T} where T = Vector{T}
+parenttype(::Type{S}) where S <: CoordinateVector{N,T} where {N,T} = Vector{T}
 IndexStyle(::Type{T}) where {T<:CoordinateVector} = IndexStyle(parenttype(T))
 
 @propagate_inbounds getindex(A::T, i::Int) where {T<:CoordinateVector} = A.data[i]
-@propagate_inbounds setindex!(A::CoordinateVector{T}, v::T, i::Int) where {T} = A.data[i] = v
+#@propagate_inbounds setindex!(A::CoordinateVector{T}, v::T, i::Int) where {T} = A.data[i] = v
 
 function convert(::Type{T}, x::S) where {T<:CoordinateVector,S<:CoordinateVector}
     data = x.g*x.data
